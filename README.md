@@ -1,2 +1,3 @@
-# opc-client-app
-opc-client-app is an application for scheduling data collection from OPC servers.
+# opc-pro-scheduler
+---
+## opc-pro-scheduler is a simple scheduler for OPC UA servers.

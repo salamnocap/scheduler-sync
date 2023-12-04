@@ -1,5 +1,6 @@
 from fastapi import HTTPException
 from pydantic import BaseModel, ConfigDict, constr, model_validator
+from uuid import UUID
 
 
 class OpcServerCreate(BaseModel):
@@ -27,8 +28,14 @@ class OpcServerUpdate(BaseModel):
         return self
 
 
-class OpcServerSchema(OpcServerCreate):
-    id: str
+class OpcServerSchema(BaseModel):
+    id: UUID
+    name: constr(min_length=3, max_length=30)
+    description: constr(min_length=3, max_length=100)
+    ip_address: constr(min_length=7, max_length=30)
+    port: int
+    node_id: constr(min_length=3, max_length=30)
+    enabled: bool = True
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -65,7 +72,7 @@ class PlcServerUpdate(BaseModel):
 
 
 class PlcServerSchema(PlcServerCreate):
-    id: str
+    id: UUID
 
     model_config = ConfigDict(from_attributes=True)
     

@@ -1,4 +1,5 @@
 import re
+from pymongo import MongoClient
 
 from fastapi import HTTPException
 from sqlalchemy import DateTime, func, Select
@@ -10,13 +11,16 @@ from sqlalchemy.sql.dml import Delete, ReturningInsert, ReturningUpdate
 from app.config import settings
 
 
+mongo_client = MongoClient(settings.mongodb_url)
+
+
 class Base(DeclarativeBase):
     created_at = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 
 async_engine = create_async_engine(
-    url=settings.db_url,
+    url=settings.database_url,
     echo=True
 )
 

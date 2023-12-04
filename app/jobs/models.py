@@ -7,9 +7,8 @@ from app.database import Base
 class Job(Base):
     __tablename__ = 'jobs'
     id = mapped_column(Integer, primary_key=True)
-    name = mapped_column(String(30))
+    name = mapped_column(String(30), unique=True, index=True)
     description = mapped_column(String(100))
-    job_type = mapped_column(String(10))
     details = mapped_column(JSON)
     opc_id = mapped_column(UUID(as_uuid=True),
                            ForeignKey("opc_servers.id", ondelete="CASCADE"),

@@ -1,73 +1,104 @@
+import datetime
+
 from fastapi import HTTPException
-from pydantic import BaseModel, ConfigDict, constr, model_validator
-from pydantic import BaseModel, validator
+from pydantic import ConfigDict, constr, model_validator, BaseModel, conint
+from typing import Literal
+from uuid import UUID
+from datetime import datetime
 
 
 class PeriodicTask(BaseModel):
-    interval: int = None
-    interval_unit: str = None
+    interval: int
+
+    @model_validator(mode='after')
+    def validate_fields(self):
+        interval = self.interval
+
+        if interval < 1:
+            raise ValueError("interval must be greater than 0")
+
+        return self
 
 
 class CronTask(BaseModel):
-    day_of_week: int = None
-    hour: int = None
-    minute: int = None
-    second: int = None
+    day_of_week: conint(ge=0, lt=7) | None = None
+    hour: conint(ge=0, lt=24) | None = None
+    minute: conint(ge=0, lt=60) | None = None
+
+    @classmethod
+    def validate(cls, **kwargs):
+        if not kwargs:
+            raise ValueError("At least one of the following parameters must be not null: "
+                             "day_of_week, hour, minute, second")
+        return kwargs
 
 
 class JobDetails(BaseModel):
-    job_type: str
-    periodic_task: PeriodicTask = None
-    cron_task: CronTask = None
+    job_type: Literal["periodic", "cron"]
+    periodic_task: PeriodicTask | None = None
+    cron_task: CronTask | None = None
 
-    class Config:
-        allow_values = {"cron", "periodic"}
+    @model_validator(mode='after')
+    def validate_fields(self):
+        if self.job_type == "periodic" and self.periodic_task is None:
+            raise ValueError("periodic_task must be not null")
+        elif self.job_type == "cron" and self.cron_task is None:
+            raise ValueError("cron_task must be not null")
 
-        @classmethod
-        def validate(cls, job_type):
-            if job_type not in cls.allow_values:
-                raise ValueError(f"Invalid job_type. Allowed values are: {', '.join(cls.allow_values)}")
-            return job_type
+        if self.periodic_task is None and self.cron_task is None:
+            raise ValueError("At least one of the following parameters must be not null: "
+                             "periodic_task, cron_task")
+        elif self.periodic_task is not None and self.cron_task is not None:
+            raise ValueError("Only one of the following parameters must be not null: "
+                             "periodic_task, cron_task")
 
-    @validator("cron_task", pre=True, always=True)
-    def check_cron_task(cls, cron_task, values):
-        job_type = values.get("job_type")
-        if job_type == "cron" and not any(cron_task.values()):
-            raise ValueError("At least one field must be filled for cron_task when job_type is 'cron'")
-        return cron_task
-
-    @validator("periodic_task", pre=True, always=True)
-    def check_periodic_task(cls, periodic_task, values):
-        job_type = values.get("job_type")
-        if job_type == "periodic" and not all(periodic_task.values()):
-            raise ValueError("All fields must be filled for periodic_task when job_type is 'periodic'")
-        return periodic_task
+        return self
 
 
 class JobCreate(BaseModel):
-    name: constr(min_length=3, max_length=30)
+    name: constr(min_length=3, max_length=30, pattern=r'^[a-zA-Z0-9]*$')
     description: constr(min_length=3, max_length=100)
-    job_type: constr(min_length=3, max_length=10)
     details: JobDetails
-    opc_id: str = None
-    plc_id: str = None
+    opc_id: UUID | None = None
+    plc_id: UUID | None = None
 
     @model_validator(mode="after")
     def check_fields(self):
         if not self.opc_id and not self.plc_id:
-            raise HTTPException(400, "opc_id or plc_id must be not null")
+            raise HTTPException(400, "At least one of the following parameters must "
+                                     "be not null: opc_id, plc_id")
         return self
 
 
-class JobSchema(JobCreate):
-    id: str
-    created_at: str
-    updated_at: str
+class JobSchemaConfig:
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        orm_mode = True
-        allow_population_by_field_name = True
-        arbitrary_types_allowed = True
-        json_encoders = {
-            ConfigDict: lambda v: dict(v),
+
+class JobSchema(JobCreate, JobSchemaConfig):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class DataSchema(BaseModel):
+    datetime: datetime
+    value: float
+
+    def to_dict(self):
+        return {
+            "datetime": self.datetime.now(),
+            "value": self.value
+        }
+
+
+class DataSchemaWDiff(BaseModel):
+    datetime: datetime
+    value: float
+    difference: float
+
+    def to_dict(self):
+        return {
+            "datetime": self.datetime.now(),
+            "value": self.value,
+            "difference": self.diff
         }
