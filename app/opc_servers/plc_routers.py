@@ -40,7 +40,7 @@ async def update_plc_server(id: UUID, plc_server: PlcServerUpdate):
 
 
 @router.delete("/plc_servers/{id}",
-                status_code=204,
-                response_model=None)
+               status_code=204,
+               response_model=None)
 async def delete_plc_server(id: UUID):
     await service.delete_plc_server(id)

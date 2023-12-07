@@ -15,15 +15,15 @@ class PeriodicTask(BaseModel):
         interval = self.interval
 
         if interval < 1:
-            raise ValueError("interval must be greater than 0")
+            raise ValueError("Interval must be greater than 0")
 
         return self
 
 
 class CronTask(BaseModel):
-    day_of_week: conint(ge=0, lt=7) | None = None
-    hour: conint(ge=0, lt=24) | None = None
-    minute: conint(ge=0, lt=60) | None = None
+    day_of_week: conint(ge=0, lt=7) | None = "*"
+    hour: conint(ge=0, lt=24) | None = "*"
+    minute: conint(ge=0, lt=60) | None = "*"
 
     @classmethod
     def validate(cls, **kwargs):
