@@ -13,7 +13,7 @@ class OPCServer(Base):
     description = mapped_column(String(100))
     ip_address = mapped_column(String(30), index=True)
     port = mapped_column(Integer, index=True)
-    node_id = mapped_column(String(30), index=True)
+    node_id = mapped_column(String(100), index=True)
     enabled = mapped_column(Boolean, default=True, index=True)
 
     jobs = relationship("Job", back_populates="opc_servers")

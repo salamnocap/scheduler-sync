@@ -8,7 +8,7 @@ class OpcServerCreate(BaseModel):
     description: constr(min_length=3, max_length=100)
     ip_address: constr(min_length=7, max_length=30)
     port: int
-    node_id: constr(min_length=3, max_length=30)
+    node_id: constr(min_length=3, max_length=100)
     enabled: bool = True
 
 
@@ -17,7 +17,7 @@ class OpcServerUpdate(BaseModel):
     description: constr(min_length=3, max_length=100) = None
     ip_address: constr(min_length=7, max_length=30) = None
     port: int = None
-    node_id: constr(min_length=3, max_length=30) = None
+    node_id: constr(min_length=3, max_length=100) = None
     enabled: bool = None
 
     @model_validator(mode="after")
@@ -34,7 +34,7 @@ class OpcServerSchema(BaseModel):
     description: constr(min_length=3, max_length=100)
     ip_address: constr(min_length=7, max_length=30)
     port: int
-    node_id: constr(min_length=3, max_length=30)
+    node_id: constr(min_length=3, max_length=100)
     enabled: bool = True
 
     model_config = ConfigDict(from_attributes=True)
