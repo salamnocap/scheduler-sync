@@ -41,7 +41,7 @@ pymongo==4.6.1
 python-dateutil==2.8.2
 python-dotenv==1.0.0
 python-multipart==0.0.6
-python-snap7==1.2
+python-snap7==1.3
 pytz==2023.3.post1
 PyYAML==6.0.1
 six==1.16.0

@@ -1,14 +1,6 @@
-FROM python:3.11-alpine
+FROM python
 
 WORKDIR /app
-
-RUN apk add --no-cache build-base wget tar p7zip
-
-COPY install_snap7.sh /app
-
-RUN chmod +x /app/install_snap7.sh
-
-RUN /app/install_snap7.sh
 
 COPY requirements.txt /app
 
