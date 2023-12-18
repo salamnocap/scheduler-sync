@@ -24,4 +24,5 @@ def create_periodic_task(name: str, seconds: int, func, args: list[str] | None =
 
 
 def delete_task(name: str):
-    del celery.conf.beat_schedule[name]
+    if name in celery.conf.beat_schedule:
+        del celery.conf.beat_schedule[name]

@@ -44,8 +44,9 @@ async def create_job(job: JobCreate, diff_field: bool = False):
 
     if opc_bool:
         opc = await get_opc_server(id=job.opc_id)
-        opc = OpcServerSchema.validate_model(opc)
-        args = [job_creds.name, opc.ip_address, opc.port, opc.node_id.to_string(), diff_field]
+        variable_part = f'."{opc.node_id.variable}"' if opc.node_id.variable is not None else ''
+        node_id = f'ns={opc.node_id.namespace};s="{opc.node_id.server}"{variable_part}'
+        args = [job_creds.name, opc.ip_address, opc.port, node_id, diff_field]
         function = save_value_from_opc
     else:
         plc = await get_plc_server(id=job.plc_id)

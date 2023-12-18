@@ -6,7 +6,7 @@ from uuid import UUID
 class OpcNodeID(BaseModel):
     namespace: int
     server: str
-    variable: str
+    variable: str = None
 
     def to_string(self):
         variable_part = f'."{self.variable}"' if self.variable is not None else ''
