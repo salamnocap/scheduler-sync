@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from pydantic import BaseModel, ConfigDict, constr, model_validator, Field
+from pydantic import BaseModel, ConfigDict, constr, model_validator
 from uuid import UUID
 
 

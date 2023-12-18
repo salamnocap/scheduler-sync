@@ -93,6 +93,7 @@ async def check_opc_server_by_id(id: UUID) -> bool:
     if not opc.enabled:
         raise HTTPException(status_code=500, detail="OPC Server is not enabled")
 
+    opc = OpcServerSchema.model_validate(opc)
     opc_client = OpcClient(opc.ip_address, opc.port)
     get_value_from_opc(opc_client, opc.node_id.to_string())
     return True
