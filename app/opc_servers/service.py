@@ -93,7 +93,8 @@ async def check_opc_server_by_id(id: UUID) -> bool:
     if not opc.enabled:
         raise HTTPException(status_code=500, detail="OPC Server is not enabled")
 
-    opc = OpcServerSchema.model_validate(opc)
+    opc = OpcServerSchema.model_validate(opc, from_attributes=True)
+    print(opc)
     opc_client = OpcClient(opc.ip_address, opc.port)
     get_value_from_opc(opc_client, opc.node_id.to_string())
     return True
@@ -106,7 +107,8 @@ async def check_plc_server_by_id(id: UUID) -> bool:
     if not plc.enabled:
         raise HTTPException(status_code=500, detail="PLC Server is not enabled")
 
-    plc = PlcServerSchema.model_validate(plc)
+    plc = PlcServerSchema.model_validate(plc, from_attributes=True)
+    print(plc)
     plc_client = Snap7Client(plc.ip_address, plc.rack, plc.slot)
     get_value_from_plc(plc_client, plc.db, plc.offset, plc.size)
     return True

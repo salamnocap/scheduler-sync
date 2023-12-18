@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 
 from app.jobs.schemas import JobSchema, JobCreate
 from app.jobs import service
-from app.jobs.mongo_crud import create_collection, delete_collection
+from app.jobs.mongo_crud import create_collection, delete_collection, get_collection
 from app.jobs.service import save_value_from_opc, save_value_from_plc
 from app.opc_servers.service import check_opc_server_by_id, check_plc_server_by_id, get_opc_server, get_plc_server
 from app.opc_servers.schemas import OpcServerSchema, PlcServerSchema
@@ -75,3 +75,13 @@ async def delete_job(id: int):
     delete_task(job.name)
     delete_collection(job.name)
     await service.delete_job(id)
+
+
+@router.get("/collection/{collection_name}",
+            response_model=list[dict])
+async def get_collection_by_name(collection_name: str,
+                                 sort_by: str = None,
+                                 sort_order: int = -1,
+                                 limit: int = 100,
+                                 skip: int = 0):
+    return get_collection(collection_name, sort_by, sort_order, limit, skip)
