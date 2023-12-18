@@ -43,7 +43,7 @@ async def create_job(job: JobCreate, diff_field: bool = False):
 
     if opc_bool:
         opc = await get_opc_server(id=job.opc_id)
-        args = [job_creds.name, opc.ip_address, opc.port, opc.node_id, diff_field]
+        args = [job_creds.name, opc.ip_address, opc.port, opc.node_id.to_string(), diff_field]
         function = save_value_from_opc
     else:
         plc = await get_plc_server(id=job.plc_id)
