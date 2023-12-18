@@ -12,7 +12,7 @@ from app.opc_clients.clients import OpcClient, Snap7Client
 
 def check_opc_server(data: OpcServerCreate) -> bool:
     opc_client = OpcClient(data.ip_address, data.port)
-    get_value_from_opc(opc_client, data.node_id)
+    get_value_from_opc(opc_client, data.node_id.to_string())
     return True
 
 
@@ -94,7 +94,7 @@ async def check_opc_server_by_id(id: UUID) -> bool:
         raise HTTPException(status_code=500, detail="OPC Server is not enabled")
 
     opc_client = OpcClient(opc.ip_address, opc.port)
-    get_value_from_opc(opc_client, opc.node_id)
+    get_value_from_opc(opc_client, opc.node_id.to_string())
     return True
 
 

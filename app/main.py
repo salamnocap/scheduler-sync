@@ -16,6 +16,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(opc_server_router, prefix="/api", tags=["opc_servers"])
-app.include_router(plc_server_router, prefix="/api", tags=["plc_servers"])
+app.include_router(opc_server_router, prefix="/api", tags=["OPC Servers"])
+app.include_router(plc_server_router, prefix="/api", tags=["PLC Servers"])
 app.include_router(job_router, prefix="/api/jobs", tags=["jobs"])
