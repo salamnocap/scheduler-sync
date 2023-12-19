@@ -5,7 +5,7 @@ from uuid import UUID
 from app.database import get_all, get_one, execute_insert, execute_update, execute_delete
 from app.opc_servers.models import OPCServer, PLCServer
 from app.opc_servers.schemas import (OpcServerCreate, OpcServerUpdate, OpcServerSchema,
-                                     PlcServerCreate, PlcServerUpdate, PlcServerSchema, OpcNodeID)
+                                     PlcServerCreate, PlcServerUpdate, PlcServerSchema)
 from app.opc_clients.service import get_value_from_opc, get_value_from_plc
 from app.opc_clients.clients import OpcClient, Snap7Client
 

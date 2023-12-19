@@ -4,7 +4,7 @@ from celery.schedules import crontab
 from app.config import settings
 
 
-celery = Celery('tasks', settings.broker_url)
+celery = Celery('tasks', broker=settings.broker_url)
 
 
 def create_cron_task(name: str, cron: dict, func, args: list[str] | None = None):
