@@ -5,7 +5,6 @@ from app.jobs import service
 from app.jobs.mongo_crud import create_collection, delete_collection, get_collection
 from app.jobs.service import save_value_from_opc, save_value_from_plc
 from app.opc_servers.service import check_opc_server_by_id, check_plc_server_by_id, get_opc_server, get_plc_server
-from app.opc_servers.schemas import OpcServerSchema, PlcServerSchema
 from app.jobs.tasks import create_cron_task, create_periodic_task, delete_task
 
 
@@ -44,13 +43,12 @@ async def create_job(job: JobCreate, diff_field: bool = False):
 
     if opc_bool:
         opc = await get_opc_server(id=job.opc_id)
-        variable_part = f'."{opc.node_id.variable}"' if opc.node_id.variable is not None else ''
-        node_id = f'ns={opc.node_id.namespace};s="{opc.node_id.server}"{variable_part}'
+        variable_part = f'."{opc.node_id["variable"]}"' if opc.node_id["variable"] is not None else ''
+        node_id = f'ns={opc.node_id["namespace"]};s="{opc.node_id["server"]}"{variable_part}'
         args = [job_creds.name, opc.ip_address, opc.port, node_id, diff_field]
         function = save_value_from_opc
     else:
         plc = await get_plc_server(id=job.plc_id)
-        plc = PlcServerSchema.validate_model(plc)
         args = [job_creds.name, plc.ip_address, plc.rack, plc.slot, plc.db, plc.offset, plc.size, diff_field]
         function = save_value_from_plc
 

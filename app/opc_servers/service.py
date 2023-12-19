@@ -94,8 +94,8 @@ async def check_opc_server_by_id(id: UUID) -> bool:
         raise HTTPException(status_code=500, detail="OPC Server is not enabled")
 
     opc_client = OpcClient(opc.ip_address, opc.port)
-    variable_part = f'."{opc.node_id.variable}"' if opc.node_id.variable is not None else ''
-    node_id = f'ns={opc.node_id.namespace};s="{opc.node_id.server}"{variable_part}'
+    variable_part = f'."{opc.node_id["variable"]}"' if opc.node_id['variable'] is not None else ''
+    node_id = f'ns={opc.node_id["namespace"]};s="{opc.node_id["server"]}"{variable_part}'
     get_value_from_opc(opc_client, node_id)
     return True
 
