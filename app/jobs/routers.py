@@ -53,12 +53,12 @@ async def create_job(job: JobCreate, diff_field: bool = False):
         function = save_value_from_plc
 
     if job.details.job_type == "cron":
-        create_cron_task(name=job.name,
+        create_cron_task(name=job_creds.name,
                          cron=job.details['cron_task'],
                          func=function,
                          args=args)
     elif job.details.job_type == "periodic":
-        create_periodic_task(name=job.name,
+        create_periodic_task(name=job_creds.name,
                              seconds=job.details.periodic_task.interval,
                              func=function,
                              args=args)

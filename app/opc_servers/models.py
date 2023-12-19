@@ -9,7 +9,7 @@ class OPCServer(Base):
     __tablename__ = "opc_servers"
 
     id = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = mapped_column(String(30), index=True)
+    name = mapped_column(String(30), index=True, unique=True)
     description = mapped_column(String(100))
     ip_address = mapped_column(String(30), index=True)
     port = mapped_column(Integer, index=True)
@@ -22,7 +22,7 @@ class OPCServer(Base):
 class PLCServer(Base):
     __tablename__ = 'plc_servers'
     id = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = mapped_column(String(30), index=True)
+    name = mapped_column(String(30), index=True, unique=True)
     ip_address = mapped_column(String(30), index=True)
     port = mapped_column(Integer, index=True)
     db = mapped_column(Integer, index=True)

@@ -30,12 +30,12 @@ def get_collection(collection_name: str,
         return collection.find().skip(skip).limit(limit)
 
 
-def create_document(collection_name: str, document: dict) -> dict:
+def create_document(collection_name: str, document: dict):
     collection = mongo_client[settings.mongodb_db][collection_name]
-    return collection.insert_one(document)
+    collection.insert_one(document)
 
 
-def delete_document(collection_name: str, document_id: str) -> dict:
+def delete_document(collection_name: str, document_id: str):
     collection = mongo_client[settings.mongodb_db][collection_name]
-    return collection.delete_one({"_id": document_id})
+    collection.delete_one({"_id": document_id})
 
