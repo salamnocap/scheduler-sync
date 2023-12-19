@@ -16,9 +16,10 @@ def create_cron_task(name: str, cron: dict, func, args: list[str] | None = None)
 
 
 def create_periodic_task(name: str, seconds: int, func, args: list[str] | None = None):
+    minutes = seconds // 60
     celery.conf.beat_schedule[name] = {
         'task': func,
-        'schedule': seconds,
+        'schedule': crontab(minute=f'*/{minutes}'),
         'args': args
     }
 
