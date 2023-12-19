@@ -6,6 +6,7 @@ from app.jobs.schemas import JobCreate, JobSchema, DataSchema, DataSchemaWDiff
 from app.jobs.mongo_crud import create_document, get_last_document
 from app.opc_clients.service import get_value_from_opc, get_value_from_plc
 from app.opc_clients.clients import OpcClient, Snap7Client
+from app.jobs.tasks import celery
 
 
 async def get_jobs() -> list[JobSchema]:
@@ -31,6 +32,7 @@ async def delete_job(id: int) -> None:
     await execute_delete(statement)
 
 
+@celery.task
 def save_value_from_opc(collection_name: str, opc_ip: str, port: int,
                         node_id: str, diff_field: bool = False) -> None:
     opc_client = OpcClient(opc_ip, port)
@@ -50,6 +52,7 @@ def save_value_from_opc(collection_name: str, opc_ip: str, port: int,
     create_document(collection_name, data.to_dict())
 
 
+@celery.task
 def save_value_from_plc(collection_name: str, plc_ip: str, rack: int, slot: int,
                         db: int, offset: int, size: int, diff_field: bool = False) -> None:
     plc_client = Snap7Client(plc_ip, rack, slot)
