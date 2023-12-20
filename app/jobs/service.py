@@ -4,7 +4,6 @@ from app.database import get_all, get_one, execute_insert, execute_delete
 from app.jobs.models import Job
 from app.jobs.schemas import JobCreate, JobSchema
 from app.opc_servers.service import get_opc_server, get_plc_server
-from app.jobs.tasks import save_value_from_opc, save_value_from_plc
 
 
 async def get_jobs() -> list[JobSchema]:
@@ -36,10 +35,10 @@ async def get_schedule_args_function(job, job_creds, diff_field):
         variable_part = f'."{opc.node_id["variable"]}"' if opc.node_id["variable"] else ''
         node_id = f'ns={opc.node_id["namespace"]};s="{opc.node_id["server"]}"{variable_part}'
         args = [job_creds.name, opc.ip_address, opc.port, node_id, diff_field]
-        function = save_value_from_opc
+        function = 'save_value_from_opc'
     else:
         plc = await get_plc_server(id=job.plc_id)
         args = [job_creds.name, plc.ip_address, plc.rack, plc.slot, plc.db, plc.offset, plc.size, diff_field]
-        function = save_value_from_plc
+        function = 'save_value_from_plc'
 
     return args, function

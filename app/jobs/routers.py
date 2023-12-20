@@ -40,7 +40,7 @@ async def create_job(job: JobCreate, diff_field: bool = False):
     job_creds = await service.create_job(job)
     create_collection(collection_name=job_creds.name)
 
-    args, function = service.get_schedule_args_function(job, job_creds, diff_field)
+    args, function = await service.get_schedule_args_function(job, job_creds, diff_field)
 
     cron = crontab(minute=f'*/5')
 
@@ -56,7 +56,7 @@ async def create_job(job: JobCreate, diff_field: bool = False):
 
     entry = RedBeatSchedulerEntry(
         name=job_creds.name,
-        task=f'app.jobs.tasks.{function.__name__}',  # Use the function name
+        task=f'app.jobs.tasks.{function}',  # Use the function name
         schedule=cron,
         args=args,
         app=celery_app
