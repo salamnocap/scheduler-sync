@@ -2,11 +2,9 @@ from sqlalchemy import select, insert, delete
 
 from app.database import get_all, get_one, execute_insert, execute_delete
 from app.jobs.models import Job
-from app.jobs.schemas import JobCreate, JobSchema, DataSchema, DataSchemaWDiff
-from app.jobs.mongo_crud import create_document, get_last_document
-from app.opc_clients.service import get_value_from_opc, get_value_from_plc
-from app.opc_clients.clients import OpcClient, Snap7Client
-from app.jobs.tasks import celery
+from app.jobs.schemas import JobCreate, JobSchema
+from app.opc_servers.service import get_opc_server, get_plc_server
+from app.jobs.tasks import save_value_from_opc, save_value_from_plc
 
 
 async def get_jobs() -> list[JobSchema]:
@@ -32,41 +30,16 @@ async def delete_job(id: int) -> None:
     await execute_delete(statement)
 
 
-@celery.task
-def save_value_from_opc(collection_name: str, opc_ip: str, port: int,
-                        node_id: str, diff_field: bool = False) -> None:
-    opc_client = OpcClient(opc_ip, port)
-    value = get_value_from_opc(opc_client, node_id)
+async def get_schedule_args_function(job, job_creds, diff_field):
+    if job.opc_id:
+        opc = await get_opc_server(id=job.opc_id)
+        variable_part = f'."{opc.node_id["variable"]}"' if opc.node_id["variable"] else ''
+        node_id = f'ns={opc.node_id["namespace"]};s="{opc.node_id["server"]}"{variable_part}'
+        args = [job_creds.name, opc.ip_address, opc.port, node_id, diff_field]
+        function = save_value_from_opc
+    else:
+        plc = await get_plc_server(id=job.plc_id)
+        args = [job_creds.name, plc.ip_address, plc.rack, plc.slot, plc.db, plc.offset, plc.size, diff_field]
+        function = save_value_from_plc
 
-    data = DataSchema(value=value)
-
-    if diff_field:
-        last_doc = get_last_document(collection_name)
-        if not last_doc:
-            data = DataSchemaWDiff(value=value, diff=0)
-        else:
-            last_value = last_doc['value']
-            diff = value - last_value
-            data = DataSchemaWDiff(value=value, diff=diff)
-
-    create_document(collection_name, data.to_dict())
-
-
-@celery.task
-def save_value_from_plc(collection_name: str, plc_ip: str, rack: int, slot: int,
-                        db: int, offset: int, size: int, diff_field: bool = False) -> None:
-    plc_client = Snap7Client(plc_ip, rack, slot)
-    value = get_value_from_plc(plc_client, db, offset, size)
-
-    data = DataSchema(value=value)
-
-    if diff_field:
-        last_doc = get_last_document(collection_name)
-        if not last_doc:
-            data = DataSchemaWDiff(value=value, diff=0)
-        else:
-            last_value = last_doc['value']
-            diff = value - last_value
-            data = DataSchemaWDiff(value=value, diff=diff)
-
-    create_document(collection_name, data.to_dict())
+    return args, function

@@ -109,4 +109,5 @@ async def check_plc_server_by_id(id: UUID) -> bool:
 
     plc_client = Snap7Client(plc.ip_address, plc.rack, plc.slot)
     get_value_from_plc(plc_client, plc.db, plc.offset, plc.size)
+
     return True

@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.opc_servers.opc_routers import router as opc_server_router
 from app.opc_servers.plc_routers import router as plc_server_router
 from app.jobs.routers import router as job_router
+from app.jobs.tasks import celery as celery_app
 
 
 app = FastAPI(title="OPC-PRO-SCHEDULER", version="0.1.0")

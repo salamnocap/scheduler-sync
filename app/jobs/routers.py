@@ -1,11 +1,12 @@
 from fastapi import APIRouter, HTTPException
+from redbeat import RedBeatSchedulerEntry
+from celery.schedules import crontab
 
 from app.jobs.schemas import JobSchema, JobCreate
 from app.jobs import service
 from app.jobs.mongo_crud import create_collection, delete_collection, get_collection
-from app.jobs.service import save_value_from_opc, save_value_from_plc
-from app.opc_servers.service import check_opc_server_by_id, check_plc_server_by_id, get_opc_server, get_plc_server
-from app.jobs.tasks import create_cron_task, create_periodic_task, delete_task
+from app.opc_servers.service import check_opc_server_by_id, check_plc_server_by_id
+from app.jobs.tasks import celery as celery_app
 
 
 router = APIRouter()
@@ -30,38 +31,38 @@ async def get_job(id: int):
 
 @router.post("/", status_code=201)
 async def create_job(job: JobCreate, diff_field: bool = False):
-    opc_bool = False
 
     if job.opc_id:
         await check_opc_server_by_id(job.opc_id)
-        opc_bool = True
     if job.plc_id:
         await check_plc_server_by_id(job.plc_id)
 
     job_creds = await service.create_job(job)
     create_collection(collection_name=job_creds.name)
 
-    if opc_bool:
-        opc = await get_opc_server(id=job.opc_id)
-        variable_part = f'."{opc.node_id["variable"]}"' if opc.node_id["variable"] is not None else ''
-        node_id = f'ns={opc.node_id["namespace"]};s="{opc.node_id["server"]}"{variable_part}'
-        args = [job_creds.name, opc.ip_address, opc.port, node_id, diff_field]
-        function = save_value_from_opc
-    else:
-        plc = await get_plc_server(id=job.plc_id)
-        args = [job_creds.name, plc.ip_address, plc.rack, plc.slot, plc.db, plc.offset, plc.size, diff_field]
-        function = save_value_from_plc
+    args, function = service.get_schedule_args_function(job, job_creds, diff_field)
+
+    cron = crontab(minute=f'*/5')
 
     if job.details.job_type == "cron":
-        create_cron_task(name=job_creds.name,
-                         cron=job.details['cron_task'],
-                         func=function,
-                         args=args)
+        cron = crontab(
+            minute=f'{job.details.cron_task.minute}',
+            hour=f'{job.details.cron_task.hour}',
+            day_of_week=f'{job.details.cron_task.day_of_week}'
+        )
     elif job.details.job_type == "periodic":
-        create_periodic_task(name=job_creds.name,
-                             seconds=job.details.periodic_task.interval,
-                             func=function,
-                             args=args)
+        minute = job.details.periodic_task.interval // 60
+        cron = crontab(minute=f'*/{minute}')
+
+    entry = RedBeatSchedulerEntry(
+        name=job_creds.name,
+        task=f'app.jobs.tasks.{function.__name__}',  # Use the function name
+        schedule=cron,
+        args=args,
+        app=celery_app
+    )
+
+    entry.save()
 
     return job_creds
 
@@ -71,7 +72,6 @@ async def create_job(job: JobCreate, diff_field: bool = False):
                response_model=None)
 async def delete_job(id: int):
     job = await service.get_job(id)
-    delete_task(job.name)
     delete_collection(job.name)
     await service.delete_job(id)
 
