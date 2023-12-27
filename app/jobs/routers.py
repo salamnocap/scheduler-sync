@@ -6,7 +6,7 @@ from app.jobs.schemas import JobSchema, JobCreate
 from app.jobs import service
 from app.jobs.mongo_crud import create_collection, delete_collection, get_collection
 from app.opc_servers.service import check_opc_server_by_id, check_plc_server_by_id
-from app.jobs.tasks import celery as celery_app
+from app.jobs.celery import celery as celery_app
 
 
 router = APIRouter()

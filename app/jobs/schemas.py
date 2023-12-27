@@ -14,8 +14,8 @@ class PeriodicTask(BaseModel):
     def validate_fields(self):
         interval = self.interval
 
-        if interval < 1:
-            raise ValueError("Interval must be greater than 0")
+        if interval < 60:
+            raise ValueError("Interval must be greater than 60 seconds")
 
         return self
 

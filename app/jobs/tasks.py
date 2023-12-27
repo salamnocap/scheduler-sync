@@ -1,13 +1,9 @@
-from celery import shared_task, Celery
+from celery import shared_task
 
 from app.jobs.mongo_crud import create_document, get_last_document
 from app.jobs.schemas import DataSchema, DataSchemaWDiff
 from app.opc_clients.service import get_value_from_opc, get_value_from_plc
 from app.opc_clients.clients import OpcClient, Snap7Client
-from app.config import settings
-
-
-celery = Celery('tasks', broker=settings.broker_url)
 
 
 @shared_task

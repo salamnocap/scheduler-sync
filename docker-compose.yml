@@ -12,6 +12,13 @@ services:
         condition: service_started
     restart: always
 
+  celery-beat:
+    image: opc-pro-scheduler
+    depends_on:
+      - api
+    command: celery -A app.jobs.celery beat --loglevel=info
+    restart: always
+
   postgres:
     image: postgres:16.0
     restart: always
