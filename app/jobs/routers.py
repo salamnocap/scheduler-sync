@@ -84,7 +84,6 @@ async def get_collection_by_name(collection_name: str,
 
 
 @router.get("/collection",
-            status_code=204,
             response_model=list[dict])
 def get_collections():
     return get_collections()

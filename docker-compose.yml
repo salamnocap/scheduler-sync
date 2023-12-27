@@ -12,12 +12,26 @@ services:
         condition: service_started
     restart: always
 
-  celery-beat:
-    image: opc-pro-scheduler
+  celery_worker:
+    container_name: celery_worker
+    build: .
+    command: celery -A app.jobs.celery worker --pool=solo --loglevel=info
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - api
+
+  flower:
+    container_name: flower
+    build: .
+    command: celery -A app.jobs.celery flower --port=5555
+    ports:
+      - "5556:5555"
     depends_on:
       - api
-    command: celery -A app.jobs.celery beat --loglevel=info
-    restart: always
+      - redis
+      - celery_worker
 
   postgres:
     image: postgres:16.0
@@ -44,13 +58,3 @@ services:
     image: mongo:latest
     ports:
       - "27017:27017"
-
-  redis-commander:
-    container_name: redis-commander
-    hostname: redis-commander
-    image: rediscommander/redis-commander:latest
-    restart: always
-    environment:
-      - REDIS_HOSTS=local:redis:6379
-    ports:
-      - "8081:8081"
