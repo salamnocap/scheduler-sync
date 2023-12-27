@@ -4,7 +4,7 @@ from celery.schedules import crontab
 
 from app.jobs.schemas import JobSchema, JobCreate
 from app.jobs import service
-from app.jobs.mongo_crud import create_collection, delete_collection, get_collection
+from app.jobs.mongo_crud import create_collection, delete_collection, get_collection, get_collections
 from app.opc_servers.service import check_opc_server_by_id, check_plc_server_by_id
 from app.jobs.celery import celery as celery_app
 
@@ -54,15 +54,11 @@ async def create_job(job: JobCreate, diff_field: bool = False):
         minute = job.details.periodic_task.interval // 60
         cron = crontab(minute=f'*/{minute}')
 
-    entry = RedBeatSchedulerEntry(
-        name=job_creds.name,
-        task=f'app.jobs.tasks.{function}',  # Use the function name
-        schedule=cron,
-        args=args,
-        app=celery_app
-    )
-
-    entry.save()
+    celery_app.conf.beat_schedule[job_creds.name] = {
+        'task': f'app.jobs.tasks.{function}',
+        'schedule': cron,
+        'args': args,
+    }
 
     return job_creds
 
@@ -74,6 +70,7 @@ async def delete_job(id: int):
     job = await service.get_job(id)
     delete_collection(job.name)
     await service.delete_job(id)
+    del celery_app.conf.beat_schedule[job.name]
 
 
 @router.get("/collection/{collection_name}",
@@ -84,3 +81,10 @@ async def get_collection_by_name(collection_name: str,
                                  limit: int = 100,
                                  skip: int = 0):
     return get_collection(collection_name, sort_by, sort_order, limit, skip)
+
+
+@router.get("/collection",
+            status_code=204,
+            response_model=list[dict])
+def get_collections():
+    return get_collections()

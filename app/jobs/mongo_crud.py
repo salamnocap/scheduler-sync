@@ -30,6 +30,10 @@ def get_collection(collection_name: str,
         return collection.find().skip(skip).limit(limit)
 
 
+def get_collections() -> list[str]:
+    return mongo_client[settings.mongodb_db].list_collection_names()
+
+
 def create_document(collection_name: str, document: dict) -> None:
     collection = mongo_client[settings.mongodb_db][collection_name]
     collection.insert_one(document)

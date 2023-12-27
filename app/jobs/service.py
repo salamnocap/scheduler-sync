@@ -34,11 +34,11 @@ async def get_schedule_args_function(job, job_creds, diff_field):
         opc = await get_opc_server(id=job.opc_id)
         variable_part = f'."{opc.node_id["variable"]}"' if opc.node_id["variable"] else ''
         node_id = f'ns={opc.node_id["namespace"]};s="{opc.node_id["server"]}"{variable_part}'
-        args = [job_creds.name, opc.ip_address, opc.port, node_id, diff_field]
+        args = (job_creds.name, opc.ip_address, opc.port, node_id, diff_field)
         function = 'save_value_from_opc'
     else:
         plc = await get_plc_server(id=job.plc_id)
-        args = [job_creds.name, plc.ip_address, plc.rack, plc.slot, plc.db, plc.offset, plc.size, diff_field]
+        args = (job_creds.name, plc.ip_address, plc.rack, plc.slot, plc.db, plc.offset, plc.size, diff_field)
         function = 'save_value_from_plc'
 
     return args, function
