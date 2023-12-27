@@ -1,5 +1,4 @@
 from fastapi import APIRouter, HTTPException
-from redbeat import RedBeatSchedulerEntry
 from celery.schedules import crontab
 
 from app.jobs.schemas import JobSchema, JobCreate
