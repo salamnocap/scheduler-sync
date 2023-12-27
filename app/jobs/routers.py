@@ -54,7 +54,7 @@ async def create_job(job: JobCreate, diff_field: bool = False):
         cron = crontab(minute=f'*/{minute}')
 
     celery_app.conf.beat_schedule[job_creds.name] = {
-        'task': f'app.jobs.tasks.{function}',
+        'task': f'app.jobs.celery.{function}',
         'schedule': cron,
         'args': args,
     }
