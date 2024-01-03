@@ -1,4 +1,4 @@
-from celery import shared_task, Celery
+from celery import Celery
 import logging
 
 from app.jobs.mongo_crud import create_document, get_last_document
@@ -7,10 +7,10 @@ from app.opc_clients.service import get_value_from_opc, get_value_from_plc
 from app.opc_clients.clients import OpcClient, Snap7Client
 from app.config import settings
 
-celery = Celery('celery', broker=settings.broker_url)
+celery = Celery('celery', broker=settings.broker_url, backend=settings.broker_url)
 
 
-@shared_task
+@celery.task(name="save_value_from_opc")
 def save_value_from_opc(collection_name: str, opc_ip: str, port: int,
                         node_id: str, diff_field: bool = False) -> None:
     logging.info('Starting save_value_from_opc task')
@@ -38,7 +38,7 @@ def save_value_from_opc(collection_name: str, opc_ip: str, port: int,
     logging.info('Finished save_value_from_opc task')
 
 
-@shared_task
+@celery.task(name="save_value_from_plc")
 def save_value_from_plc(collection_name: str, plc_ip: str, rack: int, slot: int,
                         db: int, offset: int, size: int, diff_field: bool = False) -> None:
     logging.info('Starting save_value_from_plc task')
