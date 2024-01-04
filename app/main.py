@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.opc_servers.opc_routers import router as opc_server_router
 from app.opc_servers.plc_routers import router as plc_server_router
 from app.jobs.routers import router as job_router
+from app.jobs.scheduler import scheduler
 
 
 app = FastAPI(title="OPC-PRO-SCHEDULER", version="0.1.0")
@@ -15,6 +16,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+scheduler.start()
 
 app.include_router(opc_server_router, prefix="/api", tags=["OPC Servers"])
 app.include_router(plc_server_router, prefix="/api", tags=["PLC Servers"])

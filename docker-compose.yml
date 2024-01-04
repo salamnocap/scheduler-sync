@@ -8,30 +8,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_started
     restart: always
-
-  celery_worker:
-    container_name: celery_worker
-    build: .
-    command: celery -A app.jobs.celery worker --loglevel=info
-    volumes:
-      - .:/app
-    depends_on:
-      - redis
-      - api
-
-  flower:
-    container_name: flower
-    build: .
-    command: celery -A app.jobs.celery flower --port=5555
-    ports:
-      - "5556:5555"
-    depends_on:
-      - api
-      - redis
-      - celery_worker
 
   postgres:
     image: postgres:16.0
@@ -47,12 +24,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-
-  redis:
-    image: redis:7.0-alpine
-    restart: always
-    ports:
-      - "6379:6379"
 
   mongodb:
     image: mongo:latest

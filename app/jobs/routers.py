@@ -1,11 +1,10 @@
 from fastapi import APIRouter, HTTPException
-from celery.schedules import crontab
 
 from app.jobs.schemas import JobSchema, JobCreate
 from app.jobs import service
 from app.jobs.mongo_crud import create_collection, delete_collection, get_collection, get_collections
 from app.opc_servers.service import check_opc_server_by_id, check_plc_server_by_id
-from app.jobs.celery import celery as celery_app
+from app.jobs.scheduler import add_job_if_applicable, scheduler, delete_job_if_applicable
 
 
 router = APIRouter()
@@ -39,25 +38,11 @@ async def create_job(job: JobCreate, diff_field: bool = False):
     job_creds = await service.create_job(job)
     create_collection(collection_name=job_creds.name)
 
-    args, function = await service.get_schedule_args_function(job, job_creds, diff_field)
+    args = await service.get_schedule_args(job, job_creds, diff_field)
 
-    cron = crontab(minute=f'*/5')
+    job["args"] = args
 
-    if job.details.job_type == "cron":
-        cron = crontab(
-            minute=f'{job.details.cron_task.minute}',
-            hour=f'{job.details.cron_task.hour}',
-            day_of_week=f'{job.details.cron_task.day_of_week}'
-        )
-    elif job.details.job_type == "periodic":
-        minute = job.details.periodic_task.interval // 60
-        cron = crontab(minute=f'*/{minute}')
-
-    celery_app.conf.beat_schedule[job_creds.name] = {
-        'task': f'app.jobs.celery.{function}',
-        'schedule': cron,
-        'args': args,
-    }
+    add_job_if_applicable(job, scheduler)
 
     return job_creds
 
@@ -69,7 +54,7 @@ async def delete_job(id: int):
     job = await service.get_job(id)
     delete_collection(job.name)
     await service.delete_job(id)
-    del celery_app.conf.beat_schedule[job.name]
+    delete_job_if_applicable(id, scheduler)
 
 
 @router.get("/collection/{collection_name}",
