@@ -14,8 +14,8 @@ class PeriodicTask(BaseModel):
     def validate_fields(self):
         interval = self.interval
 
-        if interval < 60:
-            raise ValueError("Interval must be greater than 60 seconds")
+        if not (0 < interval < 60):
+            raise ValueError("Interval must be greater than 0 and less than 60 minutes")
 
         return self
 
@@ -100,5 +100,5 @@ class DataSchemaWDiff(BaseModel):
         return {
             "datetime": self.datetime.now(),
             "value": self.value,
-            "difference": self.diff
+            "difference": self.difference
         }

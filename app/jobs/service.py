@@ -1,5 +1,4 @@
 from sqlalchemy import select, insert, delete
-import logging
 from datetime import datetime
 
 from app.database import get_all, get_one, execute_insert, execute_delete
@@ -10,6 +9,7 @@ from app.jobs.mongo_crud import create_document, get_last_document
 from app.jobs.schemas import DataSchema, DataSchemaWDiff
 from app.opc_clients.service import get_value_from_opc, get_value_from_plc
 from app.opc_clients.clients import OpcClient, Snap7Client
+from app.config import settings
 
 
 async def get_jobs() -> list[JobSchema]:
@@ -20,6 +20,12 @@ async def get_jobs() -> list[JobSchema]:
 
 async def get_job(id: int) -> JobSchema | None:
     statement = select(Job).where(Job.id == id)
+    job = await get_one(statement)
+    return job
+
+
+async def get_job_by_name(name: str) -> JobSchema | None:
+    statement = select(Job).where(Job.name == name)
     job = await get_one(statement)
     return job
 
@@ -64,52 +70,44 @@ async def get_schedule_args(job, job_creds, diff_field):
 
 
 def save_value_from_opc(collection_name: str, opc_ip: str, port: int,
-                        node_id: str, diff_field: bool = False) -> None:
+                        node_id: str, diff_field: bool) -> None:
     opc_client = OpcClient(opc_ip, port)
     value = get_value_from_opc(opc_client, node_id)
+    last_doc = get_last_document(db_name=settings.mongodb_db, collection_name=collection_name)
 
-    logging.info(f'Retrieved value from OPC: {value}')
+    if last_doc:
+        last_value = last_doc.get('value', 0.0)
+        diff = max(0.0, value - last_value)
+    else:
+        diff = 0.0
 
-    data = DataSchema(value=value)
+    datetime_now = datetime.now()
 
-    if diff_field:
-        last_doc = get_last_document(collection_name)
-        if not last_doc:
-            data = DataSchemaWDiff(value=value, diff=0)
-        else:
-            last_value = last_doc['value']
-            diff = value - last_value
-            data = DataSchemaWDiff(value=value, diff=diff)
-
-    logging.info(f'Prepared data for saving: {data.to_dict()}')
-
-    create_document(collection_name, data.to_dict())
-
-    logging.info('Finished save_value_from_opc task')
-    logging.info(datetime.utcnow())
+    if diff_field and diff > 0.0:
+        data = DataSchemaWDiff(datetime=datetime_now, value=value, difference=diff)
+        create_document(db_name=settings.mongodb_db, collection_name=collection_name, document=data.to_dict())
+    elif not diff_field:
+        data = DataSchema(datetime=datetime_now, value=value)
+        create_document(db_name=settings.mongodb_db, collection_name=collection_name, document=data.to_dict())
 
 
 def save_value_from_plc(collection_name: str, plc_ip: str, rack: int, slot: int,
-                        db: int, offset: int, size: int, diff_field: bool = False) -> None:
+                        db: int, offset: int, size: int, diff_field: bool) -> None:
     plc_client = Snap7Client(plc_ip, rack, slot)
     value = get_value_from_plc(plc_client, db, offset, size)
+    last_doc = get_last_document(db_name=settings.mongodb_db, collection_name=collection_name)
 
-    logging.info(f'Retrieved value from PLC: {value}')
+    if last_doc:
+        last_value = last_doc.get('value', 0.0)
+        diff = max(0.0, value - last_value)
+    else:
+        diff = 0.0
 
-    data = DataSchema(value=value)
+    datetime_now = datetime.now()
 
-    if diff_field:
-        last_doc = get_last_document(collection_name)
-        if not last_doc:
-            data = DataSchemaWDiff(value=value, diff=0)
-        else:
-            last_value = last_doc['value']
-            diff = value - last_value
-            data = DataSchemaWDiff(value=value, diff=diff)
-
-    logging.info(f'Prepared data for saving: {data.to_dict()}')
-
-    create_document(collection_name, data.to_dict())
-
-    logging.info('Finished save_value_from_plc task')
-    logging.info(datetime.utcnow())
+    if diff_field and diff > 0.0:
+        data = DataSchemaWDiff(datetime=datetime_now, value=value, difference=diff)
+        create_document(db_name=settings.mongodb_db, collection_name=collection_name, document=data.to_dict())
+    elif not diff_field:
+        data = DataSchema(datetime=datetime_now, value=value)
+        create_document(db_name=settings.mongodb_db, collection_name=collection_name, document=data.to_dict())

@@ -1,45 +1,51 @@
 from pymongo import DESCENDING
-from pymongo.cursor import Cursor
 
 from app.database import mongo_client
-from app.config import settings
 
 
-def create_collection(collection_name: str) -> None:
-    mongo_client[settings.mongodb_db].create_collection(collection_name)
+def create_collection(db_name: str, collection_name: str) -> None:
+    mongo_client[db_name].create_collection(collection_name)
 
 
-def delete_collection(collection_name: str) -> None:
-    mongo_client[settings.mongodb_db].drop_collection(collection_name)
+def delete_collection(db_name: str, collection_name: str) -> None:
+    mongo_client[db_name].drop_collection(collection_name)
 
 
-def get_last_document(collection_name: str) -> dict:
-    collection = mongo_client[settings.mongodb_db][collection_name]
-    return collection.find().sort("_id", DESCENDING).limit(1)[0]
+def get_last_document(db_name: str, collection_name: str):
+    return mongo_client[db_name][collection_name].find_one(sort=[('_id', DESCENDING)])
 
 
-def get_collection(collection_name: str,
+def get_collection(db_name: str,
+                   collection_name: str,
                    sort_by: str = None,
                    sort_order: int = DESCENDING,
                    limit: int = 100,
-                   skip: int = 0) -> Cursor:
-    collection = mongo_client[settings.mongodb_db][collection_name]
+                   skip: int = 0):
+    collection = mongo_client[db_name][collection_name]
+
     if sort_by:
-        return collection.find().sort(sort_by, sort_order).skip(skip).limit(limit)
+        cursor = collection.find().sort(sort_by, sort_order).skip(skip).limit(limit)
     else:
-        return collection.find().skip(skip).limit(limit)
+        cursor = collection.find().skip(skip).limit(limit)
+
+    result = []
+    for document in cursor:
+        document['_id'] = str(document['_id'])
+        result.append(document)
+
+    return result
 
 
-def get_collections() -> list[str]:
-    return mongo_client[settings.mongodb_db].list_collection_names()
+def get_db_collections(db_name: str) -> list[str]:
+    db = mongo_client[db_name]
+    return db.list_collection_names()
 
 
-def create_document(collection_name: str, document: dict) -> None:
-    collection = mongo_client[settings.mongodb_db][collection_name]
+def create_document(db_name: str, collection_name: str, document: dict) -> None:
+    collection = mongo_client[db_name][collection_name]
     collection.insert_one(document)
 
 
-def delete_document(collection_name: str, document_id: str) -> None:
-    collection = mongo_client[settings.mongodb_db][collection_name]
+def delete_document(db_name: str, collection_name: str, document_id: str) -> None:
+    collection = mongo_client[db_name][collection_name]
     collection.delete_one({"_id": document_id})
-
