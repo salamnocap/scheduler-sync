@@ -37,8 +37,7 @@ def get_collection(db_name: str,
 
 
 def get_db_collections(db_name: str) -> list[str]:
-    db = mongo_client[db_name]
-    return db.list_collection_names()
+    return mongo_client[db_name].list_collection_names()
 
 
 def create_document(db_name: str, collection_name: str, document: dict) -> None:

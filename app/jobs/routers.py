@@ -18,22 +18,28 @@ async def get_jobs():
 
 @router.get("/scheduled", response_model=list[dict])
 async def get_scheduled_jobs():
-    jobs = await service.get_jobs()
-    scheduled_jobs = set(
-        scheduled_job['_id'] for scheduled_job in get_collection(
-            db_name=settings.mongodb_jobstore,
-            collection_name=settings.mongodb_jobstore_collection
-        )
+    scheduled_jobs = get_collection(
+        db_name=settings.mongodb_jobstore,
+        collection_name=settings.mongodb_jobstore_collection
     )
+    scheduled_jobs_ids = [str(job["_id"]) for job in scheduled_jobs]
 
     response = []
 
-    for job in jobs:
-        scheduled = job.id in scheduled_jobs
+    for index, job_id in enumerate(scheduled_jobs_ids):
+        job = await service.get_job(int(job_id))
+        next_run_time = scheduled_jobs[index]["next_run_time"]
+
         response.append({
             "id": job.id,
-            "job": job,
-            "scheduled": scheduled
+            "name": job.name,
+            "description": job.description,
+            "details": job.details,
+            "opc_id": job.opc_id,
+            "plc_id": job.plc_id,
+            "created_at": job.created_at,
+            "updated_at": job.updated_at,
+            "next_run_time": next_run_time
         })
 
     return response
@@ -100,7 +106,7 @@ async def delete_job_by_name(name: str):
 
 
 @router.get("/collection/{collection_name}",
-            response_model=list[dict])
+            response_model=dict)
 async def get_collection_by_jobname(collection_name: str,
                                     sort_by: str = None,
                                     sort_order: int = -1,
@@ -125,9 +131,3 @@ async def get_collection_by_jobname(collection_name: str,
         "collection_data": collection_data,
         "db_collections": db_collections
     }
-
-
-@router.get("/collection",
-            response_model=list[dict])
-def get_collections():
-    return get_db_collections(db_name=settings.mongodb_db)

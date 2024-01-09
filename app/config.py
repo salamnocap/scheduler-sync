@@ -6,6 +6,8 @@ dotenv.load_dotenv()
 
 
 class Settings(BaseSettings):
+    timezone: str
+
     database_url: str
 
     mongodb_url: str

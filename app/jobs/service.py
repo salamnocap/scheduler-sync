@@ -47,6 +47,7 @@ async def get_schedule_args(job, job_creds, diff_field):
         variable_part = f'."{opc.node_id["variable"]}"' if opc.node_id["variable"] else ''
         node_id = f'ns={opc.node_id["namespace"]};s="{opc.node_id["server"]}"{variable_part}'
         args = {
+            'server_type': 'opc',
             'collection_name': job_creds.name,
             'opc_ip': opc.ip_address,
             'port': opc.port,
@@ -56,6 +57,7 @@ async def get_schedule_args(job, job_creds, diff_field):
     else:
         plc = await get_plc_server(id=job.plc_id)
         args = {
+            'server_type': 'plc',
             'collection_name': job_creds.name,
             'plc_ip': plc.ip_address,
             'rack': plc.rack,

@@ -1,29 +1,25 @@
-import datetime
-
+import pytz
 from fastapi import HTTPException
 from pydantic import ConfigDict, constr, model_validator, BaseModel, conint
 from typing import Literal
 from uuid import UUID
 from datetime import datetime
 
+from app.config import settings
+
 
 class PeriodicTask(BaseModel):
+    metric: Literal["seconds", "minutes", "hours", "days", "weeks"]
     interval: int
-
-    @model_validator(mode='after')
-    def validate_fields(self):
-        interval = self.interval
-
-        if not (0 < interval < 60):
-            raise ValueError("Interval must be greater than 0 and less than 60 minutes")
-
-        return self
 
 
 class CronTask(BaseModel):
-    day_of_week: conint(ge=0, lt=7) | None = "*"
-    hour: conint(ge=0, lt=24) | None = "*"
-    minute: conint(ge=0, lt=60) | None = "*"
+    day: conint(ge=1, le=31) | str | None = "*"
+    week: conint(ge=1, le=53) | str | None = "*"
+    day_of_week: conint(ge=0, le=6) | str | None = "*"
+    hour: conint(ge=0, le=23) | str | None = "*"
+    minute: conint(ge=0, le=59) | str | None = "*"
+    second: conint(ge=0, le=59) | str | None = "*"
 
     @classmethod
     def validate(cls, **kwargs):
@@ -98,7 +94,7 @@ class DataSchemaWDiff(BaseModel):
 
     def to_dict(self):
         return {
-            "datetime": self.datetime.now(),
+            "datetime": self.datetime.replace(tzinfo=pytz.timezone(settings.timezone)),
             "value": self.value,
             "difference": self.difference
         }

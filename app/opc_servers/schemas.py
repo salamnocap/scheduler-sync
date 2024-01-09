@@ -60,7 +60,6 @@ class OpcServerSchema(BaseModel):
 class PlcServerCreate(BaseModel):
     name: constr(min_length=3, max_length=30)
     ip_address: constr(min_length=7, max_length=30)
-    port: int
     db: int
     rack: int
     slot: int
@@ -72,7 +71,6 @@ class PlcServerCreate(BaseModel):
 class PlcServerUpdate(BaseModel):
     name: constr(min_length=3, max_length=30) = None
     ip_address: constr(min_length=7, max_length=30) = None
-    port: int = None
     db: int = None
     rack: int = None
     slot: int = None
