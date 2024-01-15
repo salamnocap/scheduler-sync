@@ -11,7 +11,7 @@ def delete_collection(db_name: str, collection_name: str) -> None:
     mongo_client[db_name].drop_collection(collection_name)
 
 
-def get_last_document(db_name: str, collection_name: str):
+def get_last_document(db_name: str, collection_name: str) -> dict or None:
     return mongo_client[db_name][collection_name].find_one(sort=[('_id', DESCENDING)])
 
 

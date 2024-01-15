@@ -71,45 +71,38 @@ async def get_schedule_args(job, job_creds, diff_field):
     return args
 
 
+def save_value(collection_name: str, value: float, diff_field: bool) -> None:
+    datetime_now = datetime.now()
+
+    if diff_field:
+        last_doc = get_last_document(db_name=settings.mongodb_db, collection_name=collection_name)
+
+        if last_doc:
+            last_value = last_doc.get('value', 0.0)
+            diff = max(0.0, value - last_value)
+
+            if diff > 0.0:
+                data = DataSchemaWDiff(datetime=datetime_now, value=value, difference=diff)
+                create_document(db_name=settings.mongodb_db, collection_name=collection_name, document=data.to_dict())
+        else:
+            data = DataSchema(datetime=datetime_now, value=value)
+            create_document(db_name=settings.mongodb_db, collection_name=collection_name, document=data.to_dict())
+    else:
+        data = DataSchema(datetime=datetime_now, value=value)
+        create_document(db_name=settings.mongodb_db, collection_name=collection_name, document=data.to_dict())
+
+
 def save_value_from_opc(collection_name: str, opc_ip: str, port: int,
                         node_id: str, diff_field: bool) -> None:
     opc_client = OpcClient(opc_ip, port)
     value = get_value_from_opc(opc_client, node_id)
-    last_doc = get_last_document(db_name=settings.mongodb_db, collection_name=collection_name)
 
-    if last_doc:
-        last_value = last_doc.get('value', 0.0)
-        diff = max(0.0, value - last_value)
-    else:
-        diff = 0.0
-
-    datetime_now = datetime.now()
-
-    if diff_field and diff > 0.0:
-        data = DataSchemaWDiff(datetime=datetime_now, value=value, difference=diff)
-        create_document(db_name=settings.mongodb_db, collection_name=collection_name, document=data.to_dict())
-    elif not diff_field:
-        data = DataSchema(datetime=datetime_now, value=value)
-        create_document(db_name=settings.mongodb_db, collection_name=collection_name, document=data.to_dict())
+    save_value(collection_name, value, diff_field)
 
 
 def save_value_from_plc(collection_name: str, plc_ip: str, rack: int, slot: int,
                         db: int, offset: int, size: int, diff_field: bool) -> None:
     plc_client = Snap7Client(plc_ip, rack, slot)
     value = get_value_from_plc(plc_client, db, offset, size)
-    last_doc = get_last_document(db_name=settings.mongodb_db, collection_name=collection_name)
 
-    if last_doc:
-        last_value = last_doc.get('value', 0.0)
-        diff = max(0.0, value - last_value)
-    else:
-        diff = 0.0
-
-    datetime_now = datetime.now()
-
-    if diff_field and diff > 0.0:
-        data = DataSchemaWDiff(datetime=datetime_now, value=value, difference=diff)
-        create_document(db_name=settings.mongodb_db, collection_name=collection_name, document=data.to_dict())
-    elif not diff_field:
-        data = DataSchema(datetime=datetime_now, value=value)
-        create_document(db_name=settings.mongodb_db, collection_name=collection_name, document=data.to_dict())
+    save_value(collection_name, value, diff_field)
