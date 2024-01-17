@@ -76,7 +76,11 @@ async def create_job(job: JobCreate, diff_field: bool = False):
         await check_plc_server_by_id(job.plc_id)
 
     job_creds = await service.create_job(job)
-    create_collection(db_name=settings.mongodb_db, collection_name=job_creds.name)
+
+    db_collections = get_db_collections(db_name=settings.mongodb_db)
+
+    if job_creds.name not in db_collections:
+        create_collection(db_name=settings.mongodb_db, collection_name=job_creds.name)
 
     args = await service.get_schedule_args(job, job_creds, diff_field)
     job_id = str(job_creds.id)
