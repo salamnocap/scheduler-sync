@@ -18,5 +18,5 @@ docker exec scheduler-sync-api-1 alembic upgrade head
 These instructions walk you through creating the Docker image, launching the application using Docker Compose, 
 and performing essential database migration via Alembic. 
 
-Follow these steps in order to successfully set up and initialize the OPC-PRO-Scheduler app, 
+Follow these steps in order to successfully set up and initialize the scheduler-sync app, 
 and access the Swagger UI for the application API at ```localhost:8082/docs.```
