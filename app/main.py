@@ -7,7 +7,7 @@ from app.jobs.routers import router as job_router
 from app.jobs.scheduler import scheduler
 
 
-app = FastAPI(title="OPC-PRO-SCHEDULER", version="0.1.0")
+app = FastAPI(title="SCHEDULER-SYNC", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,

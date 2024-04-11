@@ -1,4 +1,4 @@
-# scheduler-sync
+# SCHEDULER-SYNC
 ## scheduler-sync is a tool designed for automating data collection from OPC UA and PLC servers
 
 ### Docker Build for scheduler-sync Image
