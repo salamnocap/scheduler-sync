@@ -1,9 +1,9 @@
-# opc-pro-scheduler
-## opc-pro-scheduler is a tool designed for automating data collection from OPC UA and PLC servers
+# scheduler-sync
+## scheduler-sync is a tool designed for automating data collection from OPC UA and PLC servers
 
-### Docker Build for opc-pro-scheduler Image
+### Docker Build for scheduler-sync Image
 ```bash
-docker build -t opc-pro-scheduler .
+docker build -t scheduler-sync .
 ```
 
 ### Docker Compose Up for Application Deployment
@@ -13,7 +13,7 @@ docker compose up
 
 ### Database Migration with Alembic
 ```bash
-docker exec opc-pro-scheduler-api-1 alembic upgrade head
+docker exec scheduler-sync-api-1 alembic upgrade head
 ```
 These instructions walk you through creating the Docker image, launching the application using Docker Compose, 
 and performing essential database migration via Alembic. 
